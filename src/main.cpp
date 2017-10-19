@@ -91,12 +91,8 @@ int main(void)
     int ret = 0;
     unsigned char priv_key[crypto_box_SECRETKEYBYTES];
     ret = init::initialize(priv_key);
-    std::cout << "Private key in hex: ";
-    utils::print_hex(priv_key, sizeof(priv_key), std::cout);
     if (ret < 0)
         return ret;
-    utils::init();
 
-
-    return box() != 0;
+    return ret;
 }

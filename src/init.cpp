@@ -127,18 +127,23 @@ static bool isFileEmpty(const std::string &path)
     file.seekg(0, file.end);
     bool empty = !file.tellg();
     file.seekg(current, file.beg);
-    std::cout << "File empty: " << empty << std::endl;
     return empty;
 }
 
 int initialize(unsigned char *priv_key)
 {
-    std::string home(getenv("HOME"));
     int ret = 0;
+    std::string home(getenv("HOME"));
+    ret = sodium::sodium_init();
+    if (ret < 0)
+        return ret;
 
     ret = checkFolder(home + dirname);
-    if (ret >= 0)
+    if (ret >= 0) {
         ret = checkFiles(home + dirname);
+        if (ret < 0)
+            return ret;
+    }
 
     if (!checkLinux() && isFileEmpty(home + dirname + "private.key"))
         createKeypair((home + dirname + "public.key"), (home + dirname + "private.key"));
