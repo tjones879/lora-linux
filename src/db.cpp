@@ -65,7 +65,7 @@ void Database::createTable(const std::string &name, const std::vector<std::strin
 Database &operator <<(Database &db, const std::string &txt)
 {
     db.statement = txt;
-    sqlite3_exec(db.db.get(), db.statement.c_str(), NULL, NULL, NULL);
+    db.executeStatement(NULL, NULL, NULL);
     return db;
 }
 } /* namespace sqlite */
