@@ -40,16 +40,16 @@ bool Database::tableExists(const std::string &table)
 {
     this->statement = "SELECT name from sqlite_master WHERE type='table' AND name='" + table + "'";
     char *error_msg{};
-    int count = 0;
+    int tables = 0;
     executeStatement(+[](void *count, int argc, char **, char **){
                             int *c = reinterpret_cast<int *>(count);
                             *c = argc;
                             return 0;
-                        }, &count, &error_msg);
+                        }, &tables, &error_msg);
     if (error_msg)
         std::cout << error_msg << std::endl;
     sqlite3_free(error_msg);
-    return count > 0;
+    return tables > 0;
 }
 
 void Database::createTable(const std::string &name, const std::vector<std::string> &cols)
