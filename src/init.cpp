@@ -14,6 +14,7 @@
 #include "inc/init.hpp"
 #include "inc/utils.hpp"
 #include "inc/sodium_header.hpp"
+#include "inc/db.hpp"
 
 
 namespace init
@@ -130,19 +131,20 @@ static bool isFileEmpty(const std::string &path)
     return empty;
 }
 
-int initialize(unsigned char *priv_key)
+std::unique_ptr<sql::Database> initialize(unsigned char *priv_key)
 {
     int ret = 0;
+
     std::string home(getenv("HOME"));
     ret = sodium::sodium_init();
     if (ret < 0)
-        return ret;
+        return nullptr;
 
     ret = checkFolder(home + dirname);
     if (ret >= 0) {
         ret = checkFiles(home + dirname);
         if (ret < 0)
-            return ret;
+            return nullptr;
     }
 
     if (!checkLinux() && isFileEmpty(home + dirname + "private.key"))
@@ -150,6 +152,15 @@ int initialize(unsigned char *priv_key)
 
     getPrivateKey(home + dirname + "private.key", priv_key);
 
-    return ret;
+    std::unique_ptr<sql::Database> db = std::make_unique<sql::Database>((home + dirname + "test.db").c_str());
+    if (!db->tableExists("contacts")) {
+        std::vector<std::string> columns;
+        columns.push_back(std::string("id INTEGER PRIMARY KEY NOT NULL"));
+        columns.push_back(std::string("name TEXT NOT NULL"));
+        columns.push_back(std::string("pubkey BLOB"));
+        db->createTable("contacts", columns);
+    }
+
+    return db;
 }
 } /* namespace init */

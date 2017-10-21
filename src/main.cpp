@@ -90,9 +90,7 @@ int main(void)
 {
     int ret = 0;
     unsigned char priv_key[crypto_box_SECRETKEYBYTES];
-    ret = init::initialize(priv_key);
-    if (ret < 0)
-        return ret;
+    std::unique_ptr<sql::Database> db = init::initialize(priv_key);
 
     return ret;
 }
