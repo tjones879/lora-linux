@@ -4,7 +4,9 @@
 #include <string>
 #include <memory>
 #include <functional>
+#include <optional>
 #include <vector>
+#include <variant>
 
 namespace sql {
 #ifdef __cpluplus
@@ -17,20 +19,25 @@ extern "C" {
 }
 #endif
 
-class RowSpec {
-public:
-    std::string name;
-    std::string typeName;
-    std::string flags;
+enum class SqliteType {
+    TEXT,
+    BLOB,
+    INT,
+    UNRECOGNIZED
 };
 
-class TableSpec {
+class TypeConverter {
+private:
+    const SqliteType type;
+    SqliteType strToSqliteType(const std::string &str);
 public:
-    std::string name;
-    std::vector<RowSpec> rows;
+    TypeConverter(SqliteType t) : type(t) {}
+    TypeConverter(const std::string &str) : type(strToSqliteType(str)) {}
+    operator std::string () const;
+    operator SqliteType () const { return type; }
 };
 
-
+using sqlite3_values = std::variant<std::vector<unsigned char> &, std::vector<char> &>;
 using sqlite3_handler = std::unique_ptr<sqlite3, std::function<void(sqlite3 *)>>;
 
 class Database {
@@ -48,4 +55,30 @@ class Database {
 };
 
 } /* namespace db */
+
+namespace model {
+class ColumnSpec {
+public:
+    std::string name;
+    sql::TypeConverter type;
+    std::string flags;
+};
+
+class TableSpec {
+public:
+    std::string name;
+    std::vector<ColumnSpec> columns;
+};
+
+class Row {
+private:
+    TableSpec table;
+    std::vector<std::tuple<sql::sqlite3_values, ColumnSpec &>> entries;
+public:
+    virtual TableSpec &getTable();
+    virtual std::string values();
+    virtual ~Row();
+};
+
+}
 #endif /* DB_H */

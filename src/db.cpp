@@ -5,13 +5,39 @@
 #include <tuple>
 
 namespace sql {
-/*
-class Database {
-    public:
-        Database(const std::string &db);
-        ~Database();
-};
-*/
+SqliteType TypeConverter::strToSqliteType(const std::string &str)
+{
+    SqliteType ret;
+    if (str == "int")
+        ret = SqliteType(SqliteType::INT);
+    else if (str == "text")
+        ret = SqliteType(SqliteType::TEXT);
+    else if (str == "blob")
+        ret = SqliteType(SqliteType::BLOB);
+    else
+        ret = SqliteType(SqliteType::UNRECOGNIZED);
+    return ret;
+}
+
+TypeConverter::operator std::string() const
+{
+    std::string text;
+    switch (type) {
+        case SqliteType::INT:
+            text = "int";
+            break;
+        case SqliteType::TEXT:
+            text = "text";
+            break;
+        case SqliteType::BLOB:
+            text = "blob";
+            break;
+        case SqliteType::UNRECOGNIZED:
+            text = "";
+            break;
+    }
+    return text;
+}
 
 Database::Database(const std::string &dbFile)
 {
