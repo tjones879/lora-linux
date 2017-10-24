@@ -38,4 +38,7 @@ void print_verification(int ret);
 
 void init(void);
 }
+
+template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
+template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 #endif /* UTILS_H */

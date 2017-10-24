@@ -1,8 +1,31 @@
 #include "inc/db.hpp"
 #include "inc/utils.hpp"
+#include <algorithm>
+#include <sstream>
 #include <iostream>
 #include <vector>
 #include <tuple>
+
+namespace model {
+TableSpec::TableSpec(const std::string &name, const std::vector<ColumnSpec> &cols)
+{
+    this->name = name;
+    columns = std::vector<ColumnSpec>(cols.size());
+    std::copy(cols.begin(), cols.end(), std::back_inserter(columns));
+}
+
+std::ostream &operator<<(std::ostream &output, const std::vector<ColumnSpec> columns)
+{
+    output << "(";
+    for (auto col = columns.begin(); col != columns.end(); col++) {
+        output << col->name;
+        if (col < columns.end() - 1)
+            output << ", ";
+    }
+    output << ")";
+    return output;
+}
+}
 
 namespace sql {
 SqliteType TypeConverter::strToSqliteType(const std::string &str)
@@ -41,9 +64,9 @@ TypeConverter::operator std::string() const
 
 Database::Database(const std::string &dbFile)
 {
-    sqlite3 *temp;
-    int rc = sqlite3_open(dbFile.c_str(), &temp);
-    db = sqlite3_handler(temp, [](sqlite3 *closing){ sqlite3_close(closing);});
+    sqlite3 *temp_sqlite3;
+    int rc = sqlite3_open(dbFile.c_str(), &temp_sqlite3);
+    db = sqlite3_handler<sqlite3> (temp_sqlite3, [](sqlite3 *closing){ sqlite3_close(closing);});
     if (rc)
         db.reset();
 }
@@ -93,5 +116,58 @@ Database &operator <<(Database &db, const std::string &txt)
     db.statement = txt;
     db.executeStatement(NULL, NULL, NULL);
     return db;
+}
+
+void Database::bindValues(const std::vector<std::tuple<sqlite3_values, model::ColumnSpec>> &values)
+{
+    int index = 1;
+    for (auto val : values) {
+        auto var = std::get<0>(val);
+        auto spec = std::get<1>(val);
+
+        switch(spec.type) {
+        case SqliteType::TEXT: {
+            auto tmp = std::get<std::string>(var);
+            sqlite3_bind_text(prepStmt.get(), index, tmp.c_str(), tmp.size() + 1, SQLITE_TRANSIENT);
+            break;
+        }
+        case SqliteType::INT:
+            sqlite3_bind_int(prepStmt.get(), index, std::get<int>(var));
+            break;
+        case SqliteType::BLOB: {
+            auto tmp = std::get<std::vector<unsigned char>>(var);
+            sqlite3_bind_blob(prepStmt.get(), index, &tmp[0], tmp.size(), SQLITE_TRANSIENT);
+            break;
+        }
+        case SqliteType::UNRECOGNIZED:
+            break;
+        }
+        index++;
+    }
+}
+
+void Database::prepInsertStatement(const model::TableSpec &table,
+                                   const std::vector<model::ColumnSpec> &columns,
+                                   const std::vector<std::tuple<sqlite3_values, model::ColumnSpec>> &values)
+{
+    std::stringstream ss;
+    ss << "INSERT INTO " << table.name << columns;
+    ss << " VALUES(";
+    for (auto col = columns.begin(); col < columns.end(); col++) {
+        ss << "?";
+        if (col < columns.end() - 1)
+            ss << ", ";
+    }
+    ss << ")";
+    sqlite3_stmt *tmp;
+    int rc = sqlite3_prepare_v2(db.get(), ss.str().c_str(), ss.str().size(), &tmp, nullptr);
+    if (rc != SQLITE_OK)
+        std::cout << "sqlite3_prepare_v2 error: " << rc << std::endl;
+
+    prepStmt = sqlite3_handler<sqlite3_stmt> (tmp, [](auto *fin){ sqlite3_finalize(fin); });
+    bindValues(values);
+    rc = sqlite3_step(prepStmt.get());
+    if (rc != SQLITE_DONE)
+        std::cout << "sqlite3_step error: " << rc << std::endl;
 }
 } /* namespace sqlite */
