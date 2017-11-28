@@ -5,23 +5,21 @@
 #include "inc/init.hpp"
 #include "inc/db.hpp"
 #include <iostream>
+#include "inc/driver.hpp"
 
 int main(void)
 {
     int ret = 0;
     unsigned char priv_key[crypto_box_SECRETKEYBYTES];
     std::unique_ptr<sql::Database> db = init::initialize(priv_key);
+    auto sp = driver::SerialPort("/dev/ttyACM0");
+    /*
+    auto message = std::vector<unsigned char>();
+    message.push_back('0');
+    auto err = sp.send(message);
+    */
 
-    std::vector<model::ColumnSpec> cols;
-    auto name = model::ColumnSpec("name", sql::SqliteType::TEXT, "");
-    auto pubkey = model::ColumnSpec("pubkey", sql::SqliteType::BLOB, "");
-    auto nonce = model::ColumnSpec("nonce", sql::SqliteType::INT, "");
-    cols.push_back(name);
-    cols.push_back(pubkey);
-    cols.push_back(nonce);
-
-    model::TableSpec table("contacts", cols);
-
+    /*
     auto first = std::make_tuple("bob", name);
     std::vector<unsigned char> list;
     list.push_back(97);
@@ -36,6 +34,7 @@ int main(void)
     values.push_back(third);
 
     db->prepInsertStatement(table, cols, values);
+    */
 
     return ret;
 }
