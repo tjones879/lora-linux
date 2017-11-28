@@ -64,12 +64,30 @@ public:
 
 class Row {
 protected:
-    TableSpec table;
+    std::shared_ptr<TableSpec> table;
     std::vector<std::tuple<sql::sqlite3_values, ColumnSpec &>> entries;
+    virtual std::vector<ColumnSpec> buildColSpecs() const =0;
+    virtual void buildTableSpec() =0;
 public:
-    virtual const TableSpec &getTable() const =0;
-    virtual std::string values() const =0;
+    const std::vector<std::tuple<sql::sqlite3_values, ColumnSpec &>> &getEntries() { return entries; }
+    std::shared_ptr<TableSpec> getTable() { return table; }
     virtual ~Row() {}
+};
+
+class Contact : public Row {
+private:
+    void setValues(std::string name, std::vector<unsigned char> pubKey, uint32_t nonce);
+protected:
+    std::vector<ColumnSpec> buildColSpecs() const;
+    void buildTableSpec();
+public:
+    Contact(std::shared_ptr<TableSpec> table, std::string name, std::vector<unsigned char> pubKey, uint32_t nonce);
+    Contact(std::string name, std::vector<unsigned char> pubKey, uint32_t nonce);
+    void setNonce(uint32_t nonce);
+    const std::vector<unsigned char> &getPubKey() const;
+    const std::string &getName() const;
+    uint32_t getNonce() const;
+    std::vector<unsigned char> encryptMessage(const std::vector<unsigned char> message) const;
 };
 
 }

@@ -5,7 +5,7 @@ WARNINGS = -Weverything -Wno-c++98-compat -Wno-global-constructors \
 	 -Wno-padded
 PACKAGES = `pkg-config --cflags libsodium sqlite3`
 LDFLAGS = `pkg-config --libs libsodium sqlite3`
-SOURCES = src/init.cpp src/contact.cpp src/db.cpp src/utils.cpp
+SOURCES = src/init.cpp src/db.cpp src/utils.cpp
 TESTS = test/main.cpp
 
 main: src/main.cpp $(SOURCES)

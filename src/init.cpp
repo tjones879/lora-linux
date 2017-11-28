@@ -158,6 +158,7 @@ std::unique_ptr<sql::Database> initialize(unsigned char *priv_key)
         columns.push_back(std::string("id INTEGER PRIMARY KEY NOT NULL"));
         columns.push_back(std::string("name TEXT NOT NULL"));
         columns.push_back(std::string("pubkey BLOB"));
+        columns.push_back(std::string("nonce INTEGER NOT NULL"));
         db->createTable("contacts", columns);
     }
 

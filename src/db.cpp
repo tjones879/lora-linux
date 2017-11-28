@@ -25,6 +25,50 @@ std::ostream &operator<<(std::ostream &output, const std::vector<ColumnSpec> col
     output << ")";
     return output;
 }
+
+std::vector<ColumnSpec> Contact::buildColSpecs() const
+{
+    std::vector<ColumnSpec> cols;
+    cols.push_back(ColumnSpec("id", sql::SqliteType::INT, "PRIMARY KEY NOT NULL"));
+    cols.push_back(ColumnSpec("name", sql::SqliteType::TEXT, "NOT NULL"));
+    cols.push_back(ColumnSpec("pubkey", sql::SqliteType::BLOB, "NOT NULL"));
+    cols.push_back(ColumnSpec("nonce", sql::SqliteType::INT, "NOT NULL"));
+    return cols;
+}
+
+void Contact::buildTableSpec()
+{
+    table = std::make_shared<TableSpec>("contacts", buildColSpecs());
+}
+
+void Contact::setValues(std::string name, std::vector<unsigned char> pubKey, uint32_t nonce)
+{
+    entries = std::vector<std::tuple<sql::sqlite3_values, ColumnSpec &>>();
+    auto na = std::make_tuple(name, table->columns[1]);
+    auto pub = std::make_tuple(pubKey, table->columns[2]);
+    auto no = std::make_tuple(nonce, table->columns[3]);
+    entries.push_back(na);
+    entries.push_back(pub);
+    entries.push_back(no);
+}
+
+std::vector<unsigned char> Contact::encryptMessage(const std::vector<unsigned char> message) const {
+    // Generate/check for symmetric key and cache
+    // encrypt a message -> put onto heap
+    return std::vector<unsigned char>();
+}
+
+Contact::Contact(std::string name, std::vector<unsigned char> pubKey, uint32_t nonce)
+{
+    buildTableSpec();
+    setValues(name, pubKey, nonce);
+}
+
+Contact::Contact(std::shared_ptr<TableSpec> table, std::string name, std::vector<unsigned char> pubKey, uint32_t nonce)
+{
+    this->table = table;
+    setValues(name, pubKey, nonce);
+}
 }
 
 namespace sql {
@@ -170,4 +214,4 @@ void Database::prepInsertStatement(const model::TableSpec &table,
     if (rc != SQLITE_DONE)
         std::cout << "sqlite3_step error: " << rc << std::endl;
 }
-} /* namespace sqlite */
+}
