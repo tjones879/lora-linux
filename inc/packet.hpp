@@ -28,6 +28,9 @@ class Packet {
     PacketTypes type;
     std::vector<unsigned char> body;
 public:
+    Packet() : type(PacketTypes::NIL_PACKET) { }
+    Packet(PacketTypes pktType, std::vector<unsigned char> contents) :
+        type(pktType), body(contents) { }
     std::vector<unsigned char> serialize() const;
 };
 
