@@ -19,7 +19,13 @@ class MsgHeader {
     uint8_t position;  ///< Message number in the message stream
     uint16_t length;   ///< Length of the message in bytes
 public:
-    MsgHeader();
+    MsgHeader() {
+        type = MessageTypes::NULL_TYPE;
+        position = 0;
+        length = 0;
+    }
+    MsgHeader(MessageTypes msgType, uint8_t pos, uint16_t len) :
+        type(msgType), position(pos), length(len) { }
     /**
      * Tightly pack the header into a form suitable for sending
      * to a uC. Form is as expected:
@@ -34,7 +40,12 @@ class MsgTail {
     uint32_t hash;
     uint8_t position; ///< Should match the position in header
 public:
-    MsgTail();
+    MsgTail() {
+        hash = 0;
+        position = 0;
+    }
+    MsgTail(uint32_t hashVal, uint8_t pos) :
+        hash(hashVal), position(pos) { }
     /**
      * Tightly pack the tail into a form suitable for sending
      * to a uC. Form is as expected:
@@ -56,7 +67,9 @@ class Message {
     std::vector<unsigned char> body;
     MsgTail tail;
 public:
-    Message();
+    Message() { }
+    Message(MsgHeader start, std::vector<unsigned char> contents, MsgTail end) :
+        header(start), body(contents), tail(end) { }
     /**
      * Pack the message in prep for encryption and being sent
      * over to the uC. The returned vector will be tightly
