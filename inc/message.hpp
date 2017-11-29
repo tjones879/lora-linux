@@ -55,15 +55,15 @@ class Message {
     MsgHeader header;
     std::vector<unsigned char> body;
     MsgTail tail;
-};
-
-/**
- * Packet defines the expected protocol between the
- * uC and the user's device. The structure of this
- * will match both on the uC and the host device.
- */
-class Packet {
-
+public:
+    Message();
+    /**
+     * Pack the message in prep for encryption and being sent
+     * over to the uC. The returned vector will be tightly
+     * packed and be equal in size to what the other user
+     * should receive.
+     */
+    std::vector<unsigned char> serialize() const;
 };
 
 #endif /* MESSAGE_H */

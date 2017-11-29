@@ -19,3 +19,24 @@ uint64_t MsgTail::serialize() const {
 
     return retval;
 }
+
+
+std::vector<unsigned char> Message::serialize() const {
+    // We must calculate the size of the message being sent, this is
+    // simply the packed sum of all parts.
+    auto start = header.serialize();
+    auto end = tail.serialize();
+    auto retVec = std::vector<unsigned char>(body.size() + sizeof(start) + sizeof(end));
+
+    size_t offset = 0;
+
+    // Since we know the size of each component from above, just
+    // directly copy values into the underlying array of values.
+    memcpy(&retVec[0], &start, sizeof(start));
+    offset += sizeof(start);
+    memcpy(&retVec[offset], &body, body.size());
+    offset += body.size();
+    memcpy(&retVec[offset], &end, sizeof(end));
+
+    return retVec;
+}
