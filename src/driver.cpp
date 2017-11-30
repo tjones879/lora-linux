@@ -1,4 +1,6 @@
 #include "inc/driver.hpp"
+#include <thread>
+#include <chrono>
 
 namespace driver {
 
@@ -12,6 +14,16 @@ SerialPort::SerialPort(std::string name) {
         std::cout << "Open failed" << std::endl;
     } else {
         fcntl(serialFD, F_SETFL, FNDELAY);
+        memset(&tio, 0, sizeof(tio));
+        tio.c_cflag = CS8 | CREAD | CLOCAL;
+        tio.c_cc[VMIN] = 1;
+        tio.c_cc[VTIME] = 10;
+
+        if (cfsetospeed(&tio, B115200) < 0 || cfsetispeed(&tio, B115200) < 0)
+            std::cout << "ERROR";
+        int err = tcsetattr(serialFD, TCSANOW, &tio);
+        if (err < 0)
+            perror("Error in creation");
     }
 }
 
@@ -38,21 +50,7 @@ std::vector<unsigned char> SerialPort::receive() {
     if (!isValid()) {
         return ret;
     } else {
-        FD_ZERO(&input);
-        FD_SET(serialFD, &input);
-        int max_fd = serialFD + 1;
-        struct timeval timeout;
-        timeout.tv_sec = 10;
-        timeout.tv_usec = 0;
 
-        int retval = select(max_fd, &input, NULL, NULL, &timeout);
-        if (retval == -1) {
-            perror("select()");
-        } else if (retval) {
-            std::cout << "Ready to be read" << std::endl;
-        } else {
-            std::cout << "No output in 10s" << std::endl;
-        }
     }
     /*
     unsigned char buffer[1024];
@@ -70,6 +68,40 @@ std::vector<unsigned char> SerialPort::receive() {
     }
     */
     return ret;
+}
+
+int SerialPort::select() {
+    struct timeval timeout;
+    timeout.tv_sec = 5;
+    timeout.tv_usec = 0;
+    fd_set read_fds;
+    FD_ZERO(&read_fds);
+    FD_SET(serialFD, &read_fds);
+
+    return ::select(serialFD + 1, &read_fds, NULL, NULL, &timeout);
+};
+
+void poll(SerialPort sp) {
+    unsigned char buff[1024];
+    memset(&buff, 0, sizeof(buff[0]) * 1024);
+    while (1) {
+        int err = sp.select();
+        if (err == 1) {
+            auto len = read(sp.serialFD, &buff, 1024);
+            if (len > 0) {
+                std::cout.write(reinterpret_cast<char *>(&buff), len);
+                std::cout << std::endl;
+            } else if (len < 0) {
+                std::cout << "FD: " << sp.serialFD << std::endl;
+                perror("Error in poll");
+            }
+        } else if (err < 0) {
+            perror("Error in select");
+        } else {
+            std::cout << "Timed out: " << err << std::endl;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    }
 }
 
 }

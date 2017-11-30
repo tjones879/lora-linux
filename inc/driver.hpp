@@ -15,17 +15,19 @@
 namespace driver {
 
 class SerialPort {
-    int serialFD;
-    fd_set input;
     struct termios tio;
     bool isValid();
+    std::vector<unsigned char> receive();
 public:
+    int serialFD;
     SerialPort(std::string name);
     ~SerialPort();
 
     int send(std::vector<unsigned char> message);
-    std::vector<unsigned char> receive();
+    int select();
 };
+
+void poll(SerialPort sp);
 
 } /* namespace driver */
 #endif /* DRIVER_H */

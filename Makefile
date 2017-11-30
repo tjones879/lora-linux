@@ -4,7 +4,7 @@ WARNINGS = -Weverything -Wno-c++98-compat -Wno-global-constructors \
 	 -Wno-exit-time-destructors -Wno-zero-as-null-pointer-constant \
 	 -Wno-padded
 PACKAGES = `pkg-config --cflags libsodium sqlite3`
-LDFLAGS = `pkg-config --libs libsodium sqlite3`
+LDFLAGS = `pkg-config --libs libsodium sqlite3` -l pthread
 SOURCES = src/init.cpp src/db.cpp src/utils.cpp src/driver.cpp \
 	  src/message.cpp src/packet.cpp
 TESTS = test/main.cpp
