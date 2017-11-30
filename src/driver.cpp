@@ -27,11 +27,6 @@ SerialPort::SerialPort(std::string name) {
     }
 }
 
-SerialPort::~SerialPort() {
-    if (isValid())
-        close(serialFD);
-}
-
 int SerialPort::send(std::vector<unsigned char> message) {
     if (!isValid())
         return -1;
@@ -70,7 +65,7 @@ std::vector<unsigned char> SerialPort::receive() {
     return ret;
 }
 
-int SerialPort::select() {
+int SerialPort::select() const {
     struct timeval timeout;
     timeout.tv_sec = 5;
     timeout.tv_usec = 0;
@@ -80,6 +75,11 @@ int SerialPort::select() {
 
     return ::select(serialFD + 1, &read_fds, NULL, NULL, &timeout);
 };
+
+int SerialPort::close() {
+    auto retval = ::close(serialFD);
+    return retval;
+}
 
 void poll(SerialPort sp) {
     unsigned char buff[1024];

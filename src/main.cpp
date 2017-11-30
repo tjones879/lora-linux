@@ -18,8 +18,8 @@ int main(void)
     message.push_back('1');
     auto err = sp.send(message);
     std::cout << "FD: " << sp.serialFD << std::endl;
-    //auto handle = std::async(std::launch::async, driver::poll, sp);
-    driver::poll(sp);
+    auto handle = std::async(std::launch::async, driver::poll, sp);
+    //driver::poll(sp);
     /*
     auto retMsg = sp.receive();
     for (auto i : retMsg)
@@ -42,7 +42,8 @@ int main(void)
 
     db->prepInsertStatement(table, cols, values);
     */
-    //handle.get();
+    handle.get();
     std::cout << "After handle get" << std::endl;
+    sp.close();
     return ret;
 }

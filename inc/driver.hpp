@@ -21,10 +21,10 @@ class SerialPort {
 public:
     int serialFD;
     SerialPort(std::string name);
-    ~SerialPort();
 
     int send(std::vector<unsigned char> message);
-    int select();
+    int select() const;
+    int close();
 };
 
 void poll(SerialPort sp);
