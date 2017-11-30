@@ -34,8 +34,6 @@ int SerialPort::send(std::vector<unsigned char> message) {
     int err = write(serialFD, &message[0], message.size());
     if (err < 0)
         std::cout << "Write failed" << std::endl;
-    else
-        std::cout << "Write successful" << std::endl;
 
     return err;
 }
@@ -75,13 +73,17 @@ int SerialPort::close() {
 
 void poll(SerialPort sp) {
     unsigned char buff[1024];
+    char hex[1024];
     memset(&buff, 0, sizeof(buff[0]) * 1024);
     while (1) {
         int err = sp.selectRead();
         if (err == 1) {
             auto len = read(sp.serialFD, &buff, 1024);
             if (len > 0) {
-                std::cout.write(reinterpret_cast<char *>(&buff), len);
+                std::cout << "READ: ";
+                for (int i = 0; i < len; i++)
+                    printf("%02X", buff[i]);
+                //std::cout.write(reinterpret_cast<char *>(&buff), len);
                 std::cout << std::endl;
             } else if (len < 0) {
                 std::cout << "FD: " << sp.serialFD << std::endl;
@@ -99,8 +101,12 @@ void poll(SerialPort sp) {
 void ping(SerialPort sp) {
     auto zero = std::vector<unsigned char>();
     zero.push_back('0');
+    zero.push_back('1');
+    zero.push_back('1');
     auto one = std::vector<unsigned char>();
     one.push_back('1');
+    one.push_back('0');
+    one.push_back('0');
     while(1) {
         int status = sp.selectWrite();
         if (status == 1) {
@@ -110,8 +116,6 @@ void ping(SerialPort sp) {
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         } else if (status < 0) {
             perror("Error in ping");
-        } else {
-            std::cout << "Timed out: " << status << std::endl;
         }
     }
 }
