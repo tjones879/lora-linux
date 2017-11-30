@@ -23,11 +23,13 @@ public:
     SerialPort(std::string name);
 
     int send(std::vector<unsigned char> message);
-    int select() const;
+    int selectRead() const;
+    int selectWrite() const;
     int close();
 };
 
 void poll(SerialPort sp);
+void ping(SerialPort sp);
 
 } /* namespace driver */
 #endif /* DRIVER_H */

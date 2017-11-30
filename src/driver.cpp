@@ -42,30 +42,11 @@ int SerialPort::send(std::vector<unsigned char> message) {
 
 std::vector<unsigned char> SerialPort::receive() {
     auto ret = std::vector<unsigned char>();
-    if (!isValid()) {
-        return ret;
-    } else {
-
-    }
-    /*
-    unsigned char buffer[1024];
-    int err;
-    while ((err = read(serialFD, buffer, 1024)) >= 0) {
-        std::cout << "Reading" << std::endl;
-        ret.insert(ret.end(), &buffer[0], &buffer[err]);
-        //if (err == 1024)
-        //    err = read(serialFD, buffer, 1024);
-        //else
-            err = 0;
-    }
-    if (err < 0) {
-        perror("receive");
-    }
-    */
+    // TODO
     return ret;
 }
 
-int SerialPort::select() const {
+int SerialPort::selectRead() const {
     struct timeval timeout;
     timeout.tv_sec = 5;
     timeout.tv_usec = 0;
@@ -74,6 +55,17 @@ int SerialPort::select() const {
     FD_SET(serialFD, &read_fds);
 
     return ::select(serialFD + 1, &read_fds, NULL, NULL, &timeout);
+};
+
+int SerialPort::selectWrite() const {
+    struct timeval timeout;
+    timeout.tv_sec = 5;
+    timeout.tv_usec = 0;
+    fd_set write_fds;
+    FD_ZERO(&write_fds);
+    FD_SET(serialFD, &write_fds);
+
+    return select(serialFD + 1, NULL, &write_fds, NULL, &timeout);
 };
 
 int SerialPort::close() {
@@ -85,7 +77,7 @@ void poll(SerialPort sp) {
     unsigned char buff[1024];
     memset(&buff, 0, sizeof(buff[0]) * 1024);
     while (1) {
-        int err = sp.select();
+        int err = sp.selectRead();
         if (err == 1) {
             auto len = read(sp.serialFD, &buff, 1024);
             if (len > 0) {
@@ -104,4 +96,23 @@ void poll(SerialPort sp) {
     }
 }
 
+void ping(SerialPort sp) {
+    auto zero = std::vector<unsigned char>();
+    zero.push_back('0');
+    auto one = std::vector<unsigned char>();
+    one.push_back('1');
+    while(1) {
+        int status = sp.selectWrite();
+        if (status == 1) {
+            int err = sp.send(one);
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            err = sp.send(zero);
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        } else if (status < 0) {
+            perror("Error in ping");
+        } else {
+            std::cout << "Timed out: " << status << std::endl;
+        }
+    }
+}
 }

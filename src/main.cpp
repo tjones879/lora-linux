@@ -16,16 +16,9 @@ int main(void)
     auto sp = driver::SerialPort("/dev/ttyACM0");
     auto message = std::vector<unsigned char>();
     message.push_back('1');
-    auto err = sp.send(message);
-    std::cout << "FD: " << sp.serialFD << std::endl;
-    auto handle = std::async(std::launch::async, driver::poll, sp);
-    //driver::poll(sp);
-    /*
-    auto retMsg = sp.receive();
-    for (auto i : retMsg)
-        std::cout << i;
-    */
-
+    sp.send(message);
+    auto read_handle = std::async(std::launch::async, driver::poll, sp);
+    auto send_handle = std::async(std::launch::async, driver::ping, sp);
     /*
     auto first = std::make_tuple("bob", name);
     std::vector<unsigned char> list;
@@ -42,8 +35,8 @@ int main(void)
 
     db->prepInsertStatement(table, cols, values);
     */
-    handle.get();
-    std::cout << "After handle get" << std::endl;
+    read_handle.get();
+    send_handle.get();
     sp.close();
     return ret;
 }
