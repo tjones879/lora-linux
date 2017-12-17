@@ -1,2 +1,4 @@
 main
-unittests
+test
+build
+compile_comands.json

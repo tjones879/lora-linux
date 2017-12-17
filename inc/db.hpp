@@ -112,5 +112,22 @@ class Database {
         friend Database &operator <<(Database &db, const std::string &txt);
 };
 
+void createNewContact(sql::Database &db) {
+    auto first = std::make_tuple("bob", name);
+    std::vector<unsigned char> list;
+    list.push_back(97);
+    list.push_back(98);
+    list.push_back(99);
+    auto second = std::make_tuple(list, pubkey);
+    auto third = std::make_tuple(987, nonce);
+
+    std::vector<std::tuple<sql::sqlite3_values, model::ColumnSpec>> values;
+    values.push_back(first);
+    values.push_back(second);
+    values.push_back(third);
+
+    db->prepInsertStatement(table, cols, values);
+}
+
 }
 #endif /* DB_H */

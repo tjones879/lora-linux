@@ -121,6 +121,47 @@ static void getPrivateKey(const std::string &path, unsigned char *key)
     file.read(reinterpret_cast<char *>(key), crypto_box_SECRETKEYBYTES);
 }
 
+static void getPrivateKey(unsigned char *priv_key)
+{
+    std::string home(getenv("HOME"));
+    getPrivateKey(home + dirname + "private.key", priv_key);
+}
+
+static void getPublicKey(unsigned char *pub_key)
+{
+    std::string home(getenv("HOME"));
+    std::string path = home + dirname + "public.key";
+    std::ifstream file(path, std::ifstream::binary);
+    file.read(reinterpret_cast<char *>(pub_key), crypto_box_PUBLICKEYBYTES);
+}
+
+int decryptMessage(std::vector<unsigned char> &message, unsigned char *cipherText,
+                   int cipherLen, unsigned char *nonce, const model::Contact contact) {
+    int err = 0;
+    std::vector<unsigned char> pubKey = contact.getPubKey();
+    unsigned char priv_key[crypto_box_SECRETKEYBYTES];
+    getPrivateKey(priv_key);
+    err = sodium::crypto_box_open_easy(&message[0], cipherText, cipherLen,
+                                       nonce, &pubKey[0], priv_key);
+    return err;
+}
+
+int encryptMessage(std::vector<unsigned char> &cipher,
+                   std::vector<unsigned char> &message,
+                   const model::Contact contact)
+{
+    int err = 0;
+    unsigned char nonce[crypto_box_NONCEBYTES];
+    sodium::randombytes_buf(nonce, sizeof(nonce));
+    std::vector<unsigned char> pub_key;
+    unsigned char priv_key[crypto_box_SECRETKEYBYTES];
+    pub_key = contact.getPubKey();
+    getPrivateKey(priv_key);
+
+    err = sodium::crypto_box_easy(&cipher[0], &message[0], message.size(),
+                                  nonce, &pub_key[0], priv_key);
+}
+
 static bool isFileEmpty(const std::string &path)
 {
     std::ifstream file(path);
