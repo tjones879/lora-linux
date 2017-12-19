@@ -1,5 +1,4 @@
-#ifndef MESSAGE_H
-#define MESSAGE_H
+#pragma once
 
 #include <cstdint>
 #include <vector>
@@ -89,45 +88,3 @@ public:
      */
     std::vector<unsigned char> serialize() const;
 };
-
-
-void promptNewMsg(int &receivedMessage) {
-    std::string input;
-    while (receivedMessage > 0) {
-        std::cout << "You've got mail!" << std::endl;
-        std::cout << "Would you like to open it?" << std::endl;
-        std::cin >> input;
-        if (input == "Y") {
-            std::cout << "MESSAGE CONTENTS" << std::endl;
-            receivedMessage -= 1;
-        } else if (input == "N") {
-            std::cout << "OK" << std::endl;
-            break;
-        }
-    }
-}
-
-int promptSendMessage(driver::SerialPort &sp, sql::Database &db) {
-    std::string input;
-    std::cout << "Who would you like to message?" << std::endl;
-    std::cin >> input;
-    db.getContactByName(input);
-    std::cout << "What would you like to say?" << std::endl;
-    std::stringstream ss;
-    while (getline(std::cin, input)) {
-        if (input == "BREAK")
-            return -1;
-        ss << input ;
-    }
-    std::cout << "You want to send: '" << ss.str() << "'? (Y/N)" << std::endl;
-    std::cin >> input;
-    if (input == "Y") {
-        std::cout << "Sending and encrypting" << std::endl;
-        std::cout << "Encrypted message: " << std::endl;
-
-    } else if (input == "N") {
-        return -1;
-    }
-    return 0;
-}
-#endif /* MESSAGE_H */

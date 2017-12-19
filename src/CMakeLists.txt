@@ -11,4 +11,4 @@ add_library(lora
 
 add_executable(run ${SRC_DIR}/main.cpp)
 
-target_link_libraries(run lora SQLite3_LIBRARY_DEBUG sodium_LIBRARY_DEBUG)
+target_link_libraries(run lora ${SQLITE3_LIBRARY_DEBUG} ${sodium_LIBRARY_DEBUG} Threads::Threads)

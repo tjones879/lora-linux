@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.2)
-project (lora)
+project (lora C CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -7,11 +7,14 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules")
 set(CMAKE_CXX_COMPILER clang++)
 set(CMAKE_CXX_FLAGS "--std=c++17 -stdlib=libc++ -g -Wall -Wextra -Wno-c++98-compat")
 
-include_directories(${CMAKE_SOURCE_DIR}/)
-include_directories(${CMAKE_SOURCE_DIR}/lib)
-
 find_package(sodium REQUIRED)
 find_package(SQLite3 REQUIRED)
+find_package(Threads REQUIRED)
+
+include_directories(${CMAKE_SOURCE_DIR}/)
+include_directories(${CMAKE_SOURCE_DIR}/lib)
+include_directories(${SQLite3_INCLUDE_DIR})
+include_directories(${sobium_INCLUDE_DIRS})
 
 add_subdirectory(src)
 add_subdirectory(test)

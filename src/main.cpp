@@ -11,12 +11,52 @@
 #include <sstream>
 #include <string>
 
+void promptNewMsg(int &receivedMessage) {
+    std::string input;
+    while (receivedMessage > 0) {
+        std::cout << "You've got mail!" << std::endl;
+        std::cout << "Would you like to open it?" << std::endl;
+        std::cin >> input;
+        if (input == "Y") {
+            std::cout << "MESSAGE CONTENTS" << std::endl;
+            receivedMessage -= 1;
+        } else if (input == "N") {
+            std::cout << "OK" << std::endl;
+            break;
+        }
+    }
+}
+
+int promptSendMessage(driver::SerialPort &sp, Database &db) {
+    std::string input;
+    std::cout << "Who would you like to message?" << std::endl;
+    std::cin >> input;
+
+    std::cout << "What would you like to say?" << std::endl;
+    std::stringstream ss;
+    while (getline(std::cin, input)) {
+        if (input == "BREAK")
+            return -1;
+        ss << input ;
+    }
+    std::cout << "You want to send: '" << ss.str() << "'? (Y/N)" << std::endl;
+    std::cin >> input;
+    if (input == "Y") {
+        std::cout << "Sending and encrypting" << std::endl;
+        std::cout << "Encrypted message: " << std::endl;
+
+    } else if (input == "N") {
+        return -1;
+    }
+    return 0;
+}
+
 int main(void)
 {
     std::cout << "LORA LINUX" << std::endl;
     int ret = 0;
     unsigned char priv_key[crypto_box_SECRETKEYBYTES];
-    std::unique_ptr<sql::Database> db = init::initialize(priv_key);
+    std::unique_ptr<Database> db = init::initialize(priv_key);
     auto sp = driver::SerialPort("/dev/ttyACM0");
     {
         auto contents = std::vector<unsigned char>();
@@ -37,8 +77,6 @@ int main(void)
     while (1) {
         if (receivedMessage > 0)
             promptNewMsg(receivedMessage);
-        if (promptSendMessage(sp, db) < 0)
-            break;
     }
     return ret;
 }

@@ -15,6 +15,7 @@
 #include "inc/utils.hpp"
 #include "inc/sodium_header.hpp"
 #include "inc/db.hpp"
+#include "inc/contact.hpp"
 
 
 namespace init
@@ -136,9 +137,9 @@ static void getPublicKey(unsigned char *pub_key)
 }
 
 int decryptMessage(std::vector<unsigned char> &message, unsigned char *cipherText,
-                   int cipherLen, unsigned char *nonce, const model::Contact contact) {
+                   int cipherLen, unsigned char *nonce, const Contact contact) {
     int err = 0;
-    std::vector<unsigned char> pubKey = contact.getPubKey();
+    std::vector<unsigned char> pubKey = contact.pubKey;
     unsigned char priv_key[crypto_box_SECRETKEYBYTES];
     getPrivateKey(priv_key);
     err = sodium::crypto_box_open_easy(&message[0], cipherText, cipherLen,
@@ -148,18 +149,19 @@ int decryptMessage(std::vector<unsigned char> &message, unsigned char *cipherTex
 
 int encryptMessage(std::vector<unsigned char> &cipher,
                    std::vector<unsigned char> &message,
-                   const model::Contact contact)
+                   const Contact contact)
 {
     int err = 0;
     unsigned char nonce[crypto_box_NONCEBYTES];
     sodium::randombytes_buf(nonce, sizeof(nonce));
     std::vector<unsigned char> pub_key;
     unsigned char priv_key[crypto_box_SECRETKEYBYTES];
-    pub_key = contact.getPubKey();
+    pub_key = contact.pubKey;
     getPrivateKey(priv_key);
 
     err = sodium::crypto_box_easy(&cipher[0], &message[0], message.size(),
                                   nonce, &pub_key[0], priv_key);
+    return err;
 }
 
 static bool isFileEmpty(const std::string &path)
@@ -172,20 +174,21 @@ static bool isFileEmpty(const std::string &path)
     return empty;
 }
 
-std::unique_ptr<sql::Database> initialize(unsigned char *priv_key)
+std::unique_ptr<Database> initialize(unsigned char *priv_key)
 {
+    std::unique_ptr<Database> db = nullptr;
     int ret = 0;
 
     std::string home(getenv("HOME"));
     ret = sodium::sodium_init();
     if (ret < 0)
-        return nullptr;
+        return db;
 
     ret = checkFolder(home + dirname);
     if (ret >= 0) {
         ret = checkFiles(home + dirname);
         if (ret < 0)
-            return nullptr;
+            return db;
     }
 
     if (!checkLinux() && isFileEmpty(home + dirname + "private.key"))
@@ -193,15 +196,7 @@ std::unique_ptr<sql::Database> initialize(unsigned char *priv_key)
 
     getPrivateKey(home + dirname + "private.key", priv_key);
 
-    std::unique_ptr<sql::Database> db = std::make_unique<sql::Database>((home + dirname + "test.db").c_str());
-    if (!db->tableExists("contacts")) {
-        std::vector<std::string> columns;
-        columns.push_back(std::string("id INTEGER PRIMARY KEY NOT NULL"));
-        columns.push_back(std::string("name TEXT NOT NULL"));
-        columns.push_back(std::string("pubkey BLOB"));
-        columns.push_back(std::string("nonce INTEGER NOT NULL"));
-        db->createTable("contacts", columns);
-    }
+    db = std::make_unique<Database>((home + dirname + "test.db").c_str());
 
     return db;
 }
