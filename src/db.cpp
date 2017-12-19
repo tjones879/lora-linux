@@ -1,10 +1,10 @@
 #include "inc/db.hpp"
 #include "inc/utils.hpp"
 #include <algorithm>
-#include <sstream>
 #include <iostream>
-#include <vector>
+#include <sstream>
 #include <tuple>
+#include <vector>
 
 void closeSQLite(sqlite3 *conn) {
     sqlite3_close(conn);
@@ -15,11 +15,11 @@ Database::Database(const std::string &dbFile)
     sqlite3 *temp_sqlite3;
     int rc = sqlite3_open(dbFile.c_str(), &temp_sqlite3);
     db = SQLHandler<sqlite3> (temp_sqlite3, closeSQLite);
-    if (rc)
+    if (rc != 0)
         db.reset();
 }
 
-Database::~Database() { }
+Database::~Database() = default;
 
 /*
 bool Database::tableExists(const std::string &table)

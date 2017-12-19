@@ -20,7 +20,7 @@ namespace utils
  * print_hex() is a wrapper around sodium_bin2hex() which allocates
  * temporary memory then immediately prints the result followed by \n
  */
-int print_hex(const void *bin, const size_t bin_len, std::ostream &output);
+int print_hex(const void *bin, const size_t bin_len, std::ostream &out);
 
 void read_hex(std::vector<char> &hex, std::istream &input);
 

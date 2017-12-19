@@ -1,6 +1,6 @@
 #include "inc/driver.hpp"
-#include <thread>
 #include <chrono>
+#include <thread>
 
 namespace driver {
 
@@ -8,8 +8,8 @@ bool SerialPort::isValid() {
     return serialFD > 0;
 }
 
-SerialPort::SerialPort(std::string name) {
-    serialFD = open(name.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
+SerialPort::SerialPort(const std::string& name) {
+    serialFD = open(name.c_str(), O_RDWR | O_NOCTTY | O_NDELAY | O_CLOEXEC);
     if (serialFD < 0) {
         std::cout << "Open failed" << std::endl;
     } else {
@@ -45,25 +45,25 @@ std::vector<unsigned char> SerialPort::receive() {
 }
 
 int SerialPort::selectRead() const {
-    struct timeval timeout;
+    struct timeval timeout{};
     timeout.tv_sec = 5;
     timeout.tv_usec = 0;
-    fd_set read_fds;
+    fd_set read_fds{};
     FD_ZERO(&read_fds);
     FD_SET(serialFD, &read_fds);
 
-    return ::select(serialFD + 1, &read_fds, NULL, NULL, &timeout);
+    return ::select(serialFD + 1, &read_fds, nullptr, nullptr, &timeout);
 };
 
 int SerialPort::selectWrite() const {
-    struct timeval timeout;
+    struct timeval timeout{};
     timeout.tv_sec = 5;
     timeout.tv_usec = 0;
-    fd_set write_fds;
+    fd_set write_fds{};
     FD_ZERO(&write_fds);
     FD_SET(serialFD, &write_fds);
 
-    return select(serialFD + 1, NULL, &write_fds, NULL, &timeout);
+    return select(serialFD + 1, nullptr, &write_fds, nullptr, &timeout);
 };
 
 int SerialPort::close() {
@@ -119,4 +119,4 @@ void ping(SerialPort sp) {
         }
     }
 }
-}
+} // namespace driver

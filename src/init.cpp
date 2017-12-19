@@ -1,21 +1,21 @@
 #if defined(__linux__)
+#include <errno.h>
 #include <fcntl.h>
-#include <unistd.h>
+#include <linux/random.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <linux/random.h>
-#include <errno.h>
+#include <unistd.h>
 #endif
 
-#include <iostream>
-#include <fstream>
-#include <string>
-#include "inc/init.hpp"
-#include "inc/utils.hpp"
-#include "inc/sodium_header.hpp"
-#include "inc/db.hpp"
 #include "inc/contact.hpp"
+#include "inc/db.hpp"
+#include "inc/init.hpp"
+#include "inc/sodium_header.hpp"
+#include "inc/utils.hpp"
+#include <fstream>
+#include <iostream>
+#include <string>
 
 
 namespace init
@@ -26,7 +26,7 @@ const std::string dirname("/.radiocom/");
 static int checkLinux()
 {
     int fd, c, ret = 0;
-    fd = open("/dev/random", O_RDONLY);
+    fd = open("/dev/random", O_RDONLY | O_CLOEXEC);
 
     if (fd >= 0) {
         if (ioctl(fd, RNDGETENTCNT, &c) == 0 && c < 160) {
@@ -47,8 +47,8 @@ static int checkLinux()
 
 static int fileExists(std::string &file)
 {
-    struct stat info;
-    return !(stat(file.c_str(), &info) != 0 || !S_ISREG(info.st_mode));
+    struct stat info{};
+    return static_cast<int>(!(stat(file.c_str(), &info) != 0 || !S_ISREG(info.st_mode)));
 }
 
 static int createFolder(const std::string &folder)
@@ -62,7 +62,7 @@ static int createFolder(const std::string &folder)
 
 static int createFile(std::string &file)
 {
-    int fd = open(file.c_str(), O_RDWR | O_CREAT, 0600);
+    int fd = open(file.c_str(), O_RDWR | O_CREAT | O_CLOEXEC, 0600);
 
     if (fd < 0)
         perror("File creation");
@@ -76,9 +76,9 @@ static int checkFiles(const std::string &dir)
 {
     int ret = 0;
 
-    for (auto f : files) {
+    for (const auto& f : files) {
         std::string file(dir + f);
-        if (!fileExists(file)) {
+        if (fileExists(file) == 0) {
             ret = createFile(file);
             if (ret < 0)
                 return ret;
@@ -90,7 +90,7 @@ static int checkFiles(const std::string &dir)
 
 static int checkFolder(const std::string &folder)
 {
-    struct stat info;
+    struct stat info{};
     int ret = 0;
 
     if (stat(folder.c_str(), &info) != 0 || !S_ISDIR(info.st_mode))
@@ -169,7 +169,7 @@ static bool isFileEmpty(const std::string &path)
     std::ifstream file(path);
     std::streampos current = file.tellg();
     file.seekg(0, file.end);
-    bool empty = !file.tellg();
+    bool empty = file.tellg() == 0;
     file.seekg(current, file.beg);
     return empty;
 }
@@ -191,7 +191,7 @@ std::unique_ptr<Database> initialize(unsigned char *priv_key)
             return db;
     }
 
-    if (!checkLinux() && isFileEmpty(home + dirname + "private.key"))
+    if ((checkLinux() == 0) && isFileEmpty(home + dirname + "private.key"))
         createKeypair((home + dirname + "public.key"), (home + dirname + "private.key"));
 
     getPrivateKey(home + dirname + "private.key", priv_key);

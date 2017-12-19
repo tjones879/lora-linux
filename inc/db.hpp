@@ -19,7 +19,7 @@ private:
     SQLHandler<sqlite3_stmt> prepStmt;
     std::string statement;
 public:
-    Database(const std::string &db);
+    Database(const std::string &dbFile);
     ~Database();
     friend Database &operator <<(Database &db, const std::string &txt);
 };

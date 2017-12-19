@@ -13,7 +13,7 @@ int print_hex(const void *bin, const size_t bin_len, std::ostream &out)
 
     hex_size = bin_len * 2 + 1;
     hex = static_cast<char *>(malloc(hex_size));
-    if (!hex)
+    if (hex == nullptr)
         return -1;
 
     if (sodium::sodium_bin2hex(hex, hex_size, static_cast<const unsigned char *>(bin), bin_len) == nullptr) {
@@ -82,7 +82,7 @@ void print_verification(int ret)
         puts("Failure.\n");
 }
 
-void init(void)
+void init()
 {
     sodium::sodium_init();
     printf("Using libsodium %s\n", sodium::sodium_version_string());

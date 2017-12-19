@@ -15,12 +15,12 @@
 namespace driver {
 
 class SerialPort {
-    struct termios tio;
+    struct termios tio{};
     bool isValid();
     std::vector<unsigned char> receive();
 public:
     int serialFD;
-    SerialPort(std::string name);
+    SerialPort(const std::string& name);
 
     int send(std::vector<unsigned char> message);
     int selectRead() const;

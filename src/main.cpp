@@ -1,13 +1,13 @@
 #include <iostream>
 
-#include "inc/utils.hpp"
-#include "inc/sodium_header.hpp"
-#include "inc/init.hpp"
 #include "inc/db.hpp"
-#include <iostream>
 #include "inc/driver.hpp"
+#include "inc/init.hpp"
 #include "inc/message.hpp"
+#include "inc/sodium_header.hpp"
+#include "inc/utils.hpp"
 #include <future>
+#include <iostream>
 #include <sstream>
 #include <string>
 
@@ -27,7 +27,7 @@ void promptNewMsg(int &receivedMessage) {
     }
 }
 
-int promptSendMessage(driver::SerialPort &sp, Database &db) {
+int promptSendMessage(driver::SerialPort & /*sp*/, Database & /*db*/) {
     std::string input;
     std::cout << "Who would you like to message?" << std::endl;
     std::cin >> input;
@@ -51,7 +51,7 @@ int promptSendMessage(driver::SerialPort &sp, Database &db) {
     return 0;
 }
 
-int main(void)
+int main()
 {
     std::cout << "LORA LINUX" << std::endl;
     int ret = 0;
@@ -66,8 +66,8 @@ int main(void)
         auto message = Message(msgHead, contents, msgTail);
         auto serialized = message.serialize();
         std::cout << "Writing: " << message.serialize().size() << std::endl;
-        for (int i = 0; i < serialized.size(); i++)
-            printf("%02X", serialized[i]);
+        for (unsigned char i : serialized)
+            printf("%02X", i);
         std::cout << "END" << std::endl;
         sp.send(message.serialize());
     }
