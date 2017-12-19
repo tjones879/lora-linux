@@ -75,7 +75,7 @@ void poll(SerialPort sp) {
     unsigned char buff[1024];
     char hex[1024];
     memset(&buff, 0, sizeof(buff[0]) * 1024);
-    while (1) {
+    while (true) {
         int err = sp.selectRead();
         if (err == 1) {
             auto len = read(sp.serialFD, &buff, 1024);
@@ -107,7 +107,7 @@ void ping(SerialPort sp) {
     one.push_back('1');
     one.push_back('0');
     one.push_back('0');
-    while(1) {
+    while(true) {
         int status = sp.selectWrite();
         if (status == 1) {
             int err = sp.send(one);

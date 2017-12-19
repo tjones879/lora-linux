@@ -1,5 +1,5 @@
 #if defined(__linux__)
-#include <errno.h>
+#include <cerrno>
 #include <fcntl.h>
 #include <linux/random.h>
 #include <sys/ioctl.h>

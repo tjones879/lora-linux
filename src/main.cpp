@@ -74,7 +74,7 @@ int main()
     auto read_handle = std::async(std::launch::async, driver::poll, sp);
     std::string input;
     int receivedMessage = 0;
-    while (1) {
+    while (true) {
         if (receivedMessage > 0)
             promptNewMsg(receivedMessage);
     }

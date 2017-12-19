@@ -27,7 +27,7 @@ int print_hex(const void *bin, const size_t bin_len, std::ostream &out)
 
 }
 
-/*
+/**
  * Display a prompt for input by user. It will save the input into a buffer
  * of a specific size with room for the null terminator while removing
  * trailing newline characters.
