@@ -5,7 +5,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules")
 set(CMAKE_CXX_COMPILER clang++)
-set(CMAKE_CXX_FLAGS "--std=c++17 -stdlib=libc++ -g -Wall -Wextra -Wno-c++98-compat")
+set(CMAKE_CXX_FLAGS "--std=c++17 -stdlib=libc++ -g -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-zero-as-null-pointer-constant -Wno-padded -Wno-exit-time-destructors -Wno-missing-prototypes -Wno-shorten-64-to-32")
 
 find_package(sodium REQUIRED)
 find_package(SQLite3 REQUIRED)
