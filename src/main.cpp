@@ -7,6 +7,7 @@
 #include "inc/message.hpp"
 #include "inc/sodium_header.hpp"
 #include "inc/utils.hpp"
+#include "inc/chat.hpp"
 #include <future>
 #include <iostream>
 #include <sstream>
@@ -84,6 +85,8 @@ int main()
     unsigned char priv_key[crypto_box_SECRETKEYBYTES];
     std::shared_ptr<Database> db = init::initialize(priv_key);
     ContactTable contacts(db);
+    SentChatTable sent(db);
+    ReceivedChatTable received(db);
     int ret = 0;
     return ret;
 }

@@ -14,7 +14,6 @@
 template<class T> struct always_false : std::false_type {};
 
 template <typename T>
-using SQLHandler = std::shared_ptr<T>;
 using SQLCallback = std::function<int(void *, int, char **, char **)>;
 using SQLBlob = std::vector<unsigned char>;
 using SQLData = std::variant<SQLBlob, int32_t, int64_t, std::string>;
