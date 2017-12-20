@@ -9,6 +9,7 @@
 #endif
 
 #include "inc/contact.hpp"
+#include "inc/contact.hpp"
 #include "inc/db.hpp"
 #include "inc/init.hpp"
 #include "inc/sodium_header.hpp"
@@ -174,9 +175,9 @@ static bool isFileEmpty(const std::string &path)
     return empty;
 }
 
-std::unique_ptr<Database> initialize(unsigned char *priv_key)
+std::shared_ptr<Database> initialize(unsigned char *priv_key)
 {
-    std::unique_ptr<Database> db = nullptr;
+    std::shared_ptr<Database> db = nullptr;
     int ret = 0;
 
     std::string home(getenv("HOME"));
@@ -196,7 +197,7 @@ std::unique_ptr<Database> initialize(unsigned char *priv_key)
 
     getPrivateKey(home + dirname + "private.key", priv_key);
 
-    db = std::make_unique<Database>((home + dirname + "test.db").c_str());
+    db = std::make_shared<Database>((home + dirname + "test.db").c_str());
 
     return db;
 }

@@ -15,6 +15,6 @@ struct cryptoKey {
     std::vector<char> value;
 };
 
-std::unique_ptr<Database> initialize(unsigned char *priv_key);
+std::shared_ptr<Database> initialize(unsigned char *priv_key);
 } /* namespce init */
 #endif /* INIT_H */

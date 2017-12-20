@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include "inc/contact.hpp"
 #include "inc/db.hpp"
 #include "inc/driver.hpp"
 #include "inc/init.hpp"
@@ -54,6 +55,7 @@ int promptSendMessage(driver::SerialPort & /*sp*/, Database & /*db*/) {
 int main()
 {
     std::cout << "LORA LINUX" << std::endl;
+    /*
     int ret = 0;
     unsigned char priv_key[crypto_box_SECRETKEYBYTES];
     std::unique_ptr<Database> db = init::initialize(priv_key);
@@ -78,5 +80,10 @@ int main()
         if (receivedMessage > 0)
             promptNewMsg(receivedMessage);
     }
+    */
+    unsigned char priv_key[crypto_box_SECRETKEYBYTES];
+    std::shared_ptr<Database> db = init::initialize(priv_key);
+    ContactTable contacts(db);
+    int ret = 0;
     return ret;
 }

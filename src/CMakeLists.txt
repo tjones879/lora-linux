@@ -7,6 +7,7 @@ add_library(lora
     ${SRC_DIR}/message.cpp
     ${SRC_DIR}/packet.cpp
     ${SRC_DIR}/utils.cpp
+    ${SRC_DIR}/contact.cpp
 )
 
 add_executable(run ${SRC_DIR}/main.cpp)

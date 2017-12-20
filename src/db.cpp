@@ -6,15 +6,11 @@
 #include <tuple>
 #include <vector>
 
-void closeSQLite(sqlite3 *conn) {
-    sqlite3_close(conn);
-}
-
 Database::Database(const std::string &dbFile)
 {
     sqlite3 *temp_sqlite3;
     int rc = sqlite3_open(dbFile.c_str(), &temp_sqlite3);
-    db = SQLHandler<sqlite3> (temp_sqlite3, closeSQLite);
+    db = SQLHandler<sqlite3>(temp_sqlite3, sqlite3_close);
     if (rc != 0)
         db.reset();
 }
