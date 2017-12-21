@@ -23,9 +23,7 @@ private:
     std::shared_ptr<sqlite3> db;
     std::string statement;
 public:
-    sqlite3 *connection() {
-        return db.get();
-    }
+    sqlite3 *connection();
     Database(const std::string &dbFile);
     ~Database();
     friend Database &operator <<(Database &db, const std::string &txt);
@@ -34,17 +32,10 @@ public:
 struct SQLPrepStatement {
     sqlite3_stmt *stmt;
 
-    SQLPrepStatement(std::shared_ptr<Database> db, std::string query)
-    {
-        sqlite3_prepare_v2(db->connection(), query.c_str(), -1, &stmt, NULL);
-    }
-
-    /// Automatically deallocate the slqite3_stmt on dtor
-    ~SQLPrepStatement()
-    {
-        sqlite3_finalize(stmt);
-    }
-
+    /// Create a safe sqlite3_stmt with a db and query.
+    SQLPrepStatement(std::shared_ptr<Database> db, std::string query);
+    /// Automatically deallocate the slqite3_stmt on dtor.
+    ~SQLPrepStatement();
     /**
      * Bind data to a prepared statement.
      *
@@ -53,50 +44,26 @@ struct SQLPrepStatement {
      *              (leftmost parameter is 1).
      * @return      SQLITE_OK on success, an error code otherwise.
      */
-    int bind(SQLData data, int index)
-    {
-        int ret = std::visit([&] (auto &&arg) -> int {
-            using T = std::decay_t<decltype(arg)>;
-            if constexpr (std::is_same_v<T, int32_t>) {
-                return sqlite3_bind_int(stmt, index, arg);
-            } else if constexpr (std::is_same_v<T, int64_t>) {
-                auto sqlInt = static_cast<sqlite3_int64>(arg);
-                return sqlite3_bind_int64(stmt, index, sqlInt);
-            } else if constexpr (std::is_same_v<T, std::string>) {
-                return sqlite3_bind_text(stmt, index, arg.c_str(), -1, SQLITE_TRANSIENT);
-            } else if constexpr (std::is_same_v<T, SQLBlob>) {
-                return sqlite3_bind_blob(stmt, index, &arg[0], arg.size(), SQLITE_TRANSIENT);
-            } else {
-                static_assert(always_false<T>::value, "non-exhaustive visitor!");
-            }
-        }, data);
-
-        return ret;
-    }
-
+    int bind(SQLData data, int index);
     /**
      * Attempt to step through the statement in a blocking manner.
      *
      * @return  SQLITE_ROW if data is available, SQLITE_DONE if the execution
      *          was successful. Returns an SQLITE error code otherwise.
      */
-    int step()
-    {
-        int status = sqlite3_step(stmt);
-        // Keep attempting to step until the engine can obtain a lock.
-        while (status == SQLITE_BUSY) {
-            status = sqlite3_step(stmt);
-        }
-        return status;
-    }
+    int step();
+    /**
+     * Attempt to get a column value when a new row is available.
+     *
+     * @param index The index of the column (leftmost column is 0).
+     */
+    SQLData column(int index);
 };
 
 class Table {
-private:
+protected:
     std::shared_ptr<Database> db;
     const std::string tableName;
-protected:
-    void buildTable();
     /**
      * Construct an interface with the database for this specific table.
      *
@@ -106,16 +73,6 @@ protected:
      * @param callback  Function to be called if the table does not exist.
      */
     Table(std::shared_ptr<Database> database, const std::string &name,
-          std::function<void(std::shared_ptr<Database> database)> callback)
-        : db(database), tableName(name)
-    {
-        const std::string query("SELECT name FROM sqlite_master WHERE type='table' AND name=?");
-        SQLPrepStatement stmt(db, query);
-        stmt.bind(tableName, 1);
-
-        if (stmt.step() != SQLITE_ROW)
-            callback(db);
-    }
+          std::function<void(std::shared_ptr<Database> database)> callback);
 public:
-    bool tableExists();
 };
