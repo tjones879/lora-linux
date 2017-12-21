@@ -4,10 +4,23 @@
 #include "inc/db.hpp"
 #include "inc/contact.hpp"
 
-class SentChatTable : public Table {
+class ChatTable : public Table {
+    protected:
+        bool receiving;
+    public:
+        ChatTable(std::shared_ptr<Database> db,
+                  std::string chatName,
+                  std::function<void(std::shared_ptr<Database>)> func,
+                  bool receiver)
+            : Table(db, chatName, func)
+            , receiving(receiver)
+        {}
+};
+
+class SentChatTable : public ChatTable {
 public:
     SentChatTable(std::shared_ptr<Database> db)
-        : Table(db, "sent", [](std::shared_ptr<Database> db) -> void {
+        : ChatTable(db, "sent", [](std::shared_ptr<Database> db) -> void {
             SQLPrepStatement stmt(std::move(db),
                     "CREATE TABLE IF NOT EXISTS sent\
                      (id INTEGER PRIMARY KEY,\
@@ -16,14 +29,14 @@ public:
                       timestamp INTEGER,\
                       nonce BLOB);");
             stmt.step();
-        })
+        }, false)
     {}
 };
 
-class ReceivedChatTable : public Table {
+class ReceivedChatTable : public ChatTable {
 public:
     ReceivedChatTable(std::shared_ptr<Database> db)
-        : Table(db, "received", [](std::shared_ptr<Database> db) -> void {
+        : ChatTable(db, "received", [](std::shared_ptr<Database> db) -> void {
             SQLPrepStatement stmt(std::move(db),
                     "CREATE TABLE IF NOT EXISTS received\
                      (id INTEGER PRIMARY KEY,\
@@ -32,7 +45,8 @@ public:
                       timestamp INTEGER,\
                       nonce BLOB);");
             stmt.step();
-        }) {}
+        }, true)
+    {}
 };
 
 struct ChatMessage {
@@ -44,7 +58,7 @@ struct ChatMessage {
     std::vector<unsigned char> nonce; ///< Nonce needed to decrypt message
     bool receiver; ///< Specify whether we are the sender or receiver
 
-    ChatMessage();
+    ChatMessage()=default;
     ChatMessage(int64_t rowid, std::variant<int64_t, Contact> contactRef,
                 std::vector<unsigned char> message, uint64_t unixTimestamp,
                 std::vector<unsigned char> messageNonce, bool receiveTable)
