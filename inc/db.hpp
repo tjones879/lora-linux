@@ -30,10 +30,10 @@ public:
 };
 
 struct SQLPrepStatement {
-    sqlite3_stmt *stmt;
+    sqlite3_stmt *stmt{};
 
     /// Create a safe sqlite3_stmt with a db and query.
-    SQLPrepStatement(std::shared_ptr<Database> db, std::string query);
+    SQLPrepStatement(const std::shared_ptr<Database>& db, const std::string& query);
     /// Automatically deallocate the slqite3_stmt on dtor.
     ~SQLPrepStatement();
     /**
@@ -72,7 +72,7 @@ protected:
      * @param name      Name of table in database
      * @param callback  Function to be called if the table does not exist.
      */
-    Table(std::shared_ptr<Database> database, const std::string &name,
-          std::function<void(std::shared_ptr<Database> database)> callback);
+    Table(std::shared_ptr<Database> database, std::string name,
+          const std::function<void(std::shared_ptr<Database> database)>& callback);
 public:
 };

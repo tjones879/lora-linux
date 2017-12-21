@@ -4,6 +4,8 @@
 #include <iostream>
 #include <sstream>
 #include <tuple>
+#include <utility>
+#include <utility>
 #include <vector>
 
 Database::Database(const std::string &dbFile)
@@ -21,9 +23,9 @@ sqlite3 *Database::connection() {
     return db.get();
 }
 
-SQLPrepStatement::SQLPrepStatement(std::shared_ptr<Database> db, std::string query)
+SQLPrepStatement::SQLPrepStatement(const std::shared_ptr<Database>& db, const std::string& query)
 {
-    sqlite3_prepare_v2(db->connection(), query.c_str(), -1, &stmt, NULL);
+    sqlite3_prepare_v2(db->connection(), query.c_str(), -1, &stmt, nullptr);
 }
 
 SQLPrepStatement::~SQLPrepStatement()
@@ -87,9 +89,9 @@ SQLData SQLPrepStatement::column(int index)
     return ret;
 }
 
-Table::Table(std::shared_ptr<Database> database, const std::string &name,
-             std::function<void(std::shared_ptr<Database> database)> callback)
-    : db(database), tableName(name)
+Table::Table(std::shared_ptr<Database> database, std::string name,
+             const std::function<void(std::shared_ptr<Database> database)>& callback)
+    : db(std::move(std::move(database))), tableName(std::move(name))
 {
     const std::string query("SELECT name FROM sqlite_master WHERE type='table' AND name=?");
     SQLPrepStatement stmt(db, query);

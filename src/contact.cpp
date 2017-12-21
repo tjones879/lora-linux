@@ -20,7 +20,6 @@ void createContactsTable(std::shared_ptr<Database> db) {
 
 Contact::Contact()
     : id(0)
-    , pubKey()
     , firstName("N/A")
     , lastName("N/A")
     , notes("N/A")
